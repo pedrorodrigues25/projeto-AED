@@ -20,7 +20,7 @@ ctk.set_default_color_theme("dark-blue")
 biblioteca_musicas = {}
 musica_atual = None
 player_ativo = False
-usuario_atual = None
+utilizador_atual = None
 musicas_recentemente_tocadas = []
 base_path = "artistas/"
 
@@ -157,25 +157,25 @@ def atualizar_lista_musicas():
 
 # Funções de autenticação
 def login():
-    usuario = usuario_entry.get().strip()
+    utilizador = utilizador_entry.get().strip()
     senha = senha_entry.get().strip()
 
-    if not usuario or not senha:
+    if not utilizador or not senha:
         messagebox.showerror("Erro", "Por favor, preencha todos os campos.")
         return
 
-    caminho_usuario = os.path.join("dados_usuarios", usuario)
+    caminho_utilizador = os.path.join("dados_utilizador", utilizador)
 
-    if os.path.exists(caminho_usuario):
-        f = open(os.path.join(caminho_usuario, "dados.txt"), "r")
+    if os.path.exists(caminho_utilizador):
+        f = open(os.path.join(caminho_utilizador, "dados.txt"), "r")
         dados = f.readlines()
         f.close()
         senha_correta = dados[1].split(": ")[1].strip()
 
 
         if senha == senha_correta:
-                global usuario_atual
-                usuario_atual = usuario
+                global utilizador_atual
+                utilizador_atual = utilizador
                 login_frame.pack_forget()
                 app_frame.pack(expand=True, fill="both", padx=20, pady=20)
                 return
@@ -183,13 +183,13 @@ def login():
     messagebox.showerror("Erro", "Usuário ou senha incorretos.")
 
 def criar_conta():
-    novo_usuario = novo_usuario_entry.get().strip()
+    novo_utilizador = novo_utilizador_entry.get().strip()
     nova_senha = nova_senha_entry.get().strip()
     confirmar_senha = confirmar_senha_entry.get().strip()
 
-    caminho_usuario = os.path.join("dados_usuarios", novo_usuario)
+    caminho_utilizador = os.path.join("dados_utilizador", novo_utilizador)
 
-    if not novo_usuario or not nova_senha or not confirmar_senha:
+    if not novo_utilizador or not nova_senha or not confirmar_senha:
         messagebox.showerror("Erro", "Por favor, preencha todos os campos.")
         return
 
@@ -197,13 +197,13 @@ def criar_conta():
         messagebox.showerror("Erro", "As senhas não coincidem.")
         return
 
-    if os.path.exists(caminho_usuario):
+    if os.path.exists(caminho_utilizador):
         messagebox.showerror("Erro", "Nome de usuário já está em uso.")
         return
 
-    os.makedirs(caminho_usuario)
-    f = open(os.path.join(caminho_usuario, "dados.txt"), "w")
-    f.write(f"Usuário: {novo_usuario}\nSenha: {nova_senha}")
+    os.makedirs(caminho_utilizador)
+    f = open(os.path.join(caminho_utilizador, "dados.txt"), "w")
+    f.write(f"Usuário: {novo_utilizador}\nSenha: {nova_senha}")
     f.close()
 
 
@@ -216,19 +216,19 @@ def mostrar_tela_criar_conta():
     login_frame.pack_forget()
     criar_conta_frame.pack(expand=True, fill="both", padx=20, pady=20)
 
-def mostrar_dados_usuario():
+def mostrar_dados_utilizador():
     """Exibe os dados do usuário na área do conteúdo quando o botão 'Conta' é clicado, ou mantém o conteúdo atual caso não haja usuário logado."""
-    global usuario_atual
+    global utilizador_atual
 
-    if usuario_atual:
+    if utilizador_atual:
         # Limpar o conteúdo atual do frame
         for widget in conteudo_frame.winfo_children():
             widget.destroy()
 
-        caminho_usuario = os.path.join("dados_usuarios", usuario_atual, "dados.txt")
+        caminho_utilizador = os.path.join("dados_utilizador", utilizador_atual, "dados.txt")
 
-        if os.path.exists(caminho_usuario):
-            with open(caminho_usuario, "r") as f:
+        if os.path.exists(caminho_utilizador):
+            with open(caminho_utilizador, "r") as f:
                 dados = f.read()
 
             # Exibe os dados do usuário no frame
@@ -398,8 +398,8 @@ login_frame.pack(expand=True, fill="both", padx=20, pady=20)
 login_label = ctk.CTkLabel(login_frame, text="Login", font=("Roboto", 24, "bold"))
 login_label.pack(pady=20)
 
-usuario_entry = ctk.CTkEntry(login_frame, placeholder_text="Utilizador", width=522, height=33)
-usuario_entry.pack(pady=10, padx=20)
+utilizador_entry = ctk.CTkEntry(login_frame, placeholder_text="Utilizador", width=522, height=33)
+utilizador_entry.pack(pady=10, padx=20)
 
 senha_entry = ctk.CTkEntry(login_frame, placeholder_text="Senha", show="*", width=522, height=33)
 senha_entry.pack(pady=10, padx=20)
@@ -426,8 +426,8 @@ criar_conta_frame = ctk.CTkFrame(app, corner_radius=10)
 criar_conta_label = ctk.CTkLabel(criar_conta_frame, text="Criar Conta", font=("Roboto", 24, "bold"))
 criar_conta_label.pack(pady=20)
 
-novo_usuario_entry = ctk.CTkEntry(criar_conta_frame, placeholder_text="Novo Utilizador", width=522, height=33)
-novo_usuario_entry.pack(pady=10, padx=20)
+novo_utilizador_entry = ctk.CTkEntry(criar_conta_frame, placeholder_text="Novo Utilizador", width=522, height=33)
+novo_utilizador_entry.pack(pady=10, padx=20)
 
 
 nova_senha_entry = ctk.CTkEntry(criar_conta_frame, placeholder_text="Senha", show="*", width=522, height=33)
@@ -488,7 +488,7 @@ conteudo_frame.grid(row=1, column=1, sticky="nsew", padx=10, pady=10)
 conteudo_label = ctk.CTkLabel(conteudo_frame, text="Bem-vindo", font=("Roboto", 26, "bold"))
 conteudo_label.grid(row=0, column=0, padx=20, pady=10, sticky="w")
 
-btn_conta = ctk.CTkButton(app_frame, text="Conta", width=80, corner_radius=10, fg_color="#5B299B", text_color="white", command=mostrar_dados_usuario)
+btn_conta = ctk.CTkButton(app_frame, text="Conta", width=80, corner_radius=10, fg_color="#5B299B", text_color="white", command=mostrar_dados_utilizador)
 btn_conta.grid(row=0, column=1, padx=20, pady=10, sticky="e")
 
 recent_label = ctk.CTkLabel(conteudo_frame, text="Ouvido recentemente", font=("Roboto", 18))
@@ -534,8 +534,8 @@ volume_slider.pack(side="right", padx=20)
 
 # Função para sair
 def logout():
-    global usuario_atual
-    usuario_atual = None
+    global utilizador_atual
+    utilizador_atual = None
     app_frame.pack_forget()
     login_frame.pack(expand=True, fill="both", padx=20, pady=20)
 

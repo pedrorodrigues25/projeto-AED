@@ -212,6 +212,76 @@ def criar_conta():
     criar_conta_frame.pack_forget()
     login_frame.pack(expand=True, fill="both", padx=20, pady=20)
 
+
+def verificar_admin(usuario, senha):
+    """Verifica se o usuário é um administrador."""
+    admin_usuario = "admin"
+    admin_senha = "admin123"
+    return usuario == admin_usuario and senha == admin_senha
+
+def remover_usuario():
+    """Remove um usuário selecionado."""
+    usuario_selecionado = usuario_entry.get().strip()
+    if not usuario_selecionado:
+        messagebox.showerror("Erro", "Por favor, selecione um usuário para remover.")
+        return
+
+    caminho_usuario = os.path.join("dados_usuarios", usuario_selecionado)
+    if os.path.exists(caminho_usuario):
+        shutil.rmtree(caminho_usuario)
+        messagebox.showinfo("Sucesso", f"Usuário {usuario_selecionado} removido com sucesso.")
+    else:
+        messagebox.showerror("Erro", "Usuário não encontrado.")
+
+def mostrar_tela_admin():
+    """Mostra a tela de administração."""
+    for widget in conteudo_frame.winfo_children():
+        widget.destroy()
+
+    admin_label = ctk.CTkLabel(conteudo_frame, text="Administração", font=("Roboto", 24, "bold"))
+    admin_label.pack(pady=20)
+
+    remover_usuario_label = ctk.CTkLabel(conteudo_frame, text="Remover Usuário", font=("Roboto", 18))
+    remover_usuario_label.pack(pady=10)
+
+    global usuario_entry
+    usuario_entry = ctk.CTkEntry(conteudo_frame, placeholder_text="Usuário", width=300, height=33)
+    usuario_entry.pack(pady=10)
+
+    remover_usuario_button = ctk.CTkButton(conteudo_frame, text="Remover", command=remover_usuario, fg_color="#FF0000", text_color="white", width=300, height=33, corner_radius=15)
+    remover_usuario_button.pack(pady=10)
+
+def login():
+    global usuario_atual
+    usuario = usuario_entry.get().strip()
+    senha = senha_entry.get().strip()
+
+    if not usuario or not senha:
+        messagebox.showerror("Erro", "Por favor, preencha todos os campos.")
+        return
+
+    if verificar_admin(usuario, senha):
+        usuario_atual = usuario
+        login_frame.pack_forget()
+        app_frame.pack(expand=True, fill="both", padx=20, pady=20)
+        mostrar_tela_admin()
+        return
+
+    caminho_usuario = os.path.join("dados_usuarios", usuario)
+    if os.path.exists(caminho_usuario):
+        f = open(os.path.join(caminho_usuario, "dados.txt"), "r")
+        dados = f.readlines()
+        f.close()
+        senha_correta = dados[1].split(": ")[1].strip()
+
+        if senha == senha_correta:
+            usuario_atual = usuario
+            login_frame.pack_forget()
+            app_frame.pack(expand=True, fill="both", padx=20, pady=20)
+            return
+
+    messagebox.showerror("Erro", "Usuário ou senha incorretos.")
+
 # Configuração da interface
 def mostrar_tela_criar_conta():
     login_frame.pack_forget()

@@ -21,7 +21,7 @@ ctk.set_default_color_theme("dark-blue")
 biblioteca_musicas = {}
 musica_atual = None
 player_ativo = False
-usuario_atual = None
+utilizador_atual = None
 musicas_recentemente_tocadas = []
 base_path = "artistas/"
 
@@ -158,39 +158,39 @@ def atualizar_lista_musicas():
 
 # Funções de autenticação
 def login():
-    usuario = usuario_entry.get().strip()
+    utilizador = utilizador_entry.get().strip()
     senha = senha_entry.get().strip()
 
-    if not usuario or not senha:
+    if not utilizador or not senha:
         messagebox.showerror("Erro", "Por favor, preencha todos os campos.")
         return
 
-    caminho_usuario = os.path.join("dados_usuarios", usuario)
+    caminho_utilizador = os.path.join("dados_utilizador", utilizador)
 
-    if os.path.exists(caminho_usuario):
-        f = open(os.path.join(caminho_usuario, "dados.txt"), "r")
+    if os.path.exists(caminho_utilizador):
+        f = open(os.path.join(caminho_utilizador, "dados.txt"), "r")
         dados = f.readlines()
         f.close()
         senha_correta = dados[1].split(": ")[1].strip()
 
 
         if senha == senha_correta:
-                global usuario_atual
-                usuario_atual = usuario
+                global utilizador_atual
+                utilizador_atual = utilizador
                 login_frame.pack_forget()
                 app_frame.pack(expand=True, fill="both", padx=20, pady=20)
                 return
 
-    messagebox.showerror("Erro", "Usuário ou senha incorretos.")
+    messagebox.showerror("Erro", "Utilizador ou senha incorretos.")
 
 def criar_conta():
-    novo_usuario = novo_usuario_entry.get().strip()
+    novo_utilizador = novo_utilizador_entry.get().strip()
     nova_senha = nova_senha_entry.get().strip()
     confirmar_senha = confirmar_senha_entry.get().strip()
 
-    caminho_usuario = os.path.join("dados_usuarios", novo_usuario)
+    caminho_utilizador = os.path.join("dados_utilizador", novo_utilizador)
 
-    if not novo_usuario or not nova_senha or not confirmar_senha:
+    if not novo_utilizador or not nova_senha or not confirmar_senha:
         messagebox.showerror("Erro", "Por favor, preencha todos os campos.")
         return
 
@@ -198,13 +198,13 @@ def criar_conta():
         messagebox.showerror("Erro", "As senhas não coincidem.")
         return
 
-    if os.path.exists(caminho_usuario):
-        messagebox.showerror("Erro", "Nome de usuário já está em uso.")
+    if os.path.exists(caminho_utilizador):
+        messagebox.showerror("Erro", "Nome de utilizador já está em uso.")
         return
 
-    os.makedirs(caminho_usuario)
-    f = open(os.path.join(caminho_usuario, "dados.txt"), "w")
-    f.write(f"Usuário: {novo_usuario}\nSenha: {nova_senha}")
+    os.makedirs(caminho_utilizador)
+    f = open(os.path.join(caminho_utilizador, "dados.txt"), "w")
+    f.write(f"Utilizador: {novo_utilizador}\nSenha: {nova_senha}")
     f.close()
 
 
@@ -213,25 +213,25 @@ def criar_conta():
     login_frame.pack(expand=True, fill="both", padx=20, pady=20)
 
 
-def verificar_admin(usuario, senha):
-    """Verifica se o usuário é um administrador."""
-    admin_usuario = "admin"
+def verificar_admin(utilizador, senha):
+    """Verifica se o utilizador é um administrador."""
+    admin_utilizador = "admin"
     admin_senha = "admin123"
-    return usuario == admin_usuario and senha == admin_senha
+    return utilizador == admin_utilizador and senha == admin_senha
 
-def remover_usuario():
-    """Remove um usuário selecionado."""
-    usuario_selecionado = usuario_entry.get().strip()
-    if not usuario_selecionado:
-        messagebox.showerror("Erro", "Por favor, selecione um usuário para remover.")
+def remover_utilizador():
+    """Remove um utilizador selecionado."""
+    utilizador_selecionado = utilizador_entry.get().strip()
+    if not utilizador_selecionado:
+        messagebox.showerror("Erro", "Por favor, selecione um utilizador para remover.")
         return
 
-    caminho_usuario = os.path.join("dados_usuarios", usuario_selecionado)
-    if os.path.exists(caminho_usuario):
-        shutil.rmtree(caminho_usuario)
-        messagebox.showinfo("Sucesso", f"Usuário {usuario_selecionado} removido com sucesso.")
+    caminho_utilizador = os.path.join("dados_utilizador", utilizador_selecionado)
+    if os.path.exists(caminho_utilizador):
+        shutil.rmtree(caminho_utilizador)
+        messagebox.showinfo("Sucesso", f"Utilizador {utilizador_selecionado} removido com sucesso.")
     else:
-        messagebox.showerror("Erro", "Usuário não encontrado.")
+        messagebox.showerror("Erro", "Utilizador não encontrado.")
 
 def mostrar_tela_admin():
     """Mostra a tela de administração."""
@@ -241,78 +241,78 @@ def mostrar_tela_admin():
     admin_label = ctk.CTkLabel(conteudo_frame, text="Administração", font=("Roboto", 24, "bold"))
     admin_label.pack(pady=20)
 
-    remover_usuario_label = ctk.CTkLabel(conteudo_frame, text="Remover Usuário", font=("Roboto", 18))
-    remover_usuario_label.pack(pady=10)
+    remover_utilizador_label = ctk.CTkLabel(conteudo_frame, text="Remover utilizador", font=("Roboto", 18))
+    remover_utilizador_label.pack(pady=10)
 
-    global usuario_entry
-    usuario_entry = ctk.CTkEntry(conteudo_frame, placeholder_text="Usuário", width=300, height=33)
-    usuario_entry.pack(pady=10)
+    global utilizador_entry
+    utilizador_entry = ctk.CTkEntry(conteudo_frame, placeholder_text="Utilizador", width=300, height=33)
+    utilizador_entry.pack(pady=10)
 
-    remover_usuario_button = ctk.CTkButton(conteudo_frame, text="Remover", command=remover_usuario, fg_color="#FF0000", text_color="white", width=300, height=33, corner_radius=15)
-    remover_usuario_button.pack(pady=10)
+    remover_utilizador_button = ctk.CTkButton(conteudo_frame, text="Remover", command=remover_utilizador, fg_color="#FF0000", text_color="white", width=300, height=33, corner_radius=15)
+    remover_utilizador_button.pack(pady=10)
 
 def login():
-    global usuario_atual
-    usuario = usuario_entry.get().strip()
+    global utilizador_atual
+    utilizador = utilizador_entry.get().strip()
     senha = senha_entry.get().strip()
 
-    if not usuario or not senha:
+    if not utilizador or not senha:
         messagebox.showerror("Erro", "Por favor, preencha todos os campos.")
         return
 
-    if verificar_admin(usuario, senha):
-        usuario_atual = usuario
+    if verificar_admin(utilizador, senha):
+        utilizador_atual = utilizador
         login_frame.pack_forget()
         app_frame.pack(expand=True, fill="both", padx=20, pady=20)
         mostrar_tela_admin()
         return
 
-    caminho_usuario = os.path.join("dados_usuarios", usuario)
-    if os.path.exists(caminho_usuario):
-        f = open(os.path.join(caminho_usuario, "dados.txt"), "r")
+    caminho_utilizador = os.path.join("dados_utilizador", utilizador)
+    if os.path.exists(caminho_utilizador):
+        f = open(os.path.join(caminho_utilizador, "dados.txt"), "r")
         dados = f.readlines()
         f.close()
         senha_correta = dados[1].split(": ")[1].strip()
 
         if senha == senha_correta:
-            usuario_atual = usuario
+            utilizador_atual = utilizador
             login_frame.pack_forget()
             app_frame.pack(expand=True, fill="both", padx=20, pady=20)
             return
 
-    messagebox.showerror("Erro", "Usuário ou senha incorretos.")
+    messagebox.showerror("Erro", "Utilizador ou senha incorretos.")
 
 # Configuração da interface
 def mostrar_tela_criar_conta():
     login_frame.pack_forget()
     criar_conta_frame.pack(expand=True, fill="both", padx=20, pady=20)
 
-def mostrar_dados_usuario():
-    """Exibe os dados do usuário na área do conteúdo quando o botão 'Conta' é clicado, ou mantém o conteúdo atual caso não haja usuário logado."""
-    global usuario_atual
+def mostrar_dados_utilizador():
+    """Exibe os dados do utilizador na área do conteúdo quando o botão 'Conta' é clicado, ou mantém o conteúdo atual caso não haja utilizador logado."""
+    global utilizador_atual
 
-    if usuario_atual:
+    if utilizador_atual:
         # Limpar o conteúdo atual do frame
         for widget in conteudo_frame.winfo_children():
             widget.destroy()
 
-        caminho_usuario = os.path.join("dados_usuarios", usuario_atual, "dados.txt")
+        caminho_utilizador = os.path.join("dados_utilizador", utilizador_atual, "dados.txt")
 
-        if os.path.exists(caminho_usuario):
-            f = open(caminho_usuario, "r")
+        if os.path.exists(caminho_utilizador):
+            f = open(caminho_utilizador, "r")
             try:
                 dados = f.read()
             finally:
                 f.close()
 
-            # Exibe os dados do usuário no frame
+            # Exibe os dados do utilizador no frame
             dados_label = ctk.CTkLabel(conteudo_frame, text=dados, font=("Roboto", 16))
             dados_label.pack(pady=20, padx=20)
         else:
-            messagebox.showwarning("Erro", "Não foi possível encontrar os dados do usuário.")
+            messagebox.showwarning("Erro", "Não foi possível encontrar os dados do utilizador.")
     else:
         # Mostra uma mensagem de erro, mas não altera a tela
-        messagebox.showerror("Erro", "Nenhum usuário está logado no momento.")
+        messagebox.showerror("Erro", "Nenhum utilizador está logado no momento.")
 
 def restaurar_tela_padrao():
     """Restaura o conteúdo padrão do frame."""
@@ -656,8 +656,8 @@ login_frame.pack(expand=True, fill="both", padx=20, pady=20)
 login_label = ctk.CTkLabel(login_frame, text="Login", font=("Roboto", 24, "bold"))
 login_label.pack(pady=20)
 
-usuario_entry = ctk.CTkEntry(login_frame, placeholder_text="Usuário", width=522, height=33)
-usuario_entry.pack(pady=10, padx=20)
+utilizador_entry = ctk.CTkEntry(login_frame, placeholder_text="utilizador", width=522, height=33)
+utilizador_entry.pack(pady=10, padx=20)
 
 senha_entry = ctk.CTkEntry(login_frame, placeholder_text="Senha", show="*", width=522, height=33)
 senha_entry.pack(pady=10, padx=20)
@@ -684,8 +684,8 @@ criar_conta_frame = ctk.CTkFrame(app, corner_radius=10)
 criar_conta_label = ctk.CTkLabel(criar_conta_frame, text="Criar Conta", font=("Roboto", 24, "bold"))
 criar_conta_label.pack(pady=20)
 
-novo_usuario_entry = ctk.CTkEntry(criar_conta_frame, placeholder_text="Novo Usuário", width=522, height=33)
-novo_usuario_entry.pack(pady=10, padx=20)
+novo_utilizador_entry = ctk.CTkEntry(criar_conta_frame, placeholder_text="Novo Utilizador", width=522, height=33)
+novo_utilizador_entry.pack(pady=10, padx=20)
 
 
 nova_senha_entry = ctk.CTkEntry(criar_conta_frame, placeholder_text="Senha", show="*", width=522, height=33)
@@ -705,7 +705,7 @@ btn_voltar_login.pack(pady=10)
 app_frame = ctk.CTkFrame(app)
 
 # Cabeçalho da tela principal
-app_label = ctk.CTkLabel(app_frame, text="Gerenciador de Música", font=("Roboto", 24, "bold"))
+app_label = ctk.CTkLabel(app_frame, text="MusicWave", font=("Roboto", 24, "bold"))
 app_label.grid(row=0, column=0, padx=20, pady=10, sticky="w")
 
 btn_conta = ctk.CTkButton(app_frame, text="Conta", width=80, corner_radius=10, fg_color="#5B299B", text_color="white")
@@ -746,7 +746,7 @@ conteudo_frame.grid(row=1, column=1, sticky="nsew", padx=10, pady=10)
 conteudo_label = ctk.CTkLabel(conteudo_frame, text="Bem-vindo", font=("Roboto", 26, "bold"))
 conteudo_label.grid(row=0, column=0, padx=20, pady=10, sticky="w")
 
-btn_conta = ctk.CTkButton(app_frame, text="Conta", width=80, corner_radius=10, fg_color="#5B299B", text_color="white", command=mostrar_dados_usuario)
+btn_conta = ctk.CTkButton(app_frame, text="Conta", width=80, corner_radius=10, fg_color="#5B299B", text_color="white", command=mostrar_dados_utilizador)
 btn_conta.grid(row=0, column=1, padx=20, pady=10, sticky="e")
 
 recent_label = ctk.CTkLabel(conteudo_frame, text="Ouvido recentemente", font=("Roboto", 18))
@@ -770,7 +770,7 @@ barra_progresso.set(0.0)
 barra_progresso.pack(fill="x", padx=20, pady=10)
 barra_progresso.bind("<Button-1>", alterar_posicao)  # Vincula o clique na barra
 
-status_label = ctk.CTkLabel(controles_frame, text="Bem-vindo ao Gerenciador de Música", font=("Roboto", 14))
+status_label = ctk.CTkLabel(controles_frame, text="Bem-vindo ao Gestor de Música", font=("Roboto", 14))
 status_label.pack(side="left", padx=20)
 
 btn_prev = ctk.CTkButton(controles_frame, text="\u23ee\ufe0f", width=50)
@@ -792,8 +792,8 @@ volume_slider.pack(side="right", padx=20)
 
 # Função para sair
 def logout():
-    global usuario_atual
-    usuario_atual = None
+    global utilizador_atual
+    utilizador_atual = None
     app_frame.pack_forget()
     login_frame.pack(expand=True, fill="both", padx=20, pady=20)
 

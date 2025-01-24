@@ -212,7 +212,7 @@ def criar_conta():
     criar_conta_frame.pack_forget()
     login_frame.pack(expand=True, fill="both", padx=20, pady=20)
 
-
+        
 def verificar_admin(utilizador, senha):
     """Verifica se o utilizador é um administrador."""
     admin_utilizador = "admin"
@@ -708,7 +708,7 @@ app_frame = ctk.CTkFrame(app)
 app_label = ctk.CTkLabel(app_frame, text="MusicWave", font=("Roboto", 24, "bold"))
 app_label.grid(row=0, column=0, padx=20, pady=10, sticky="w")
 
-btn_conta = ctk.CTkButton(app_frame, text="Conta", width=80, corner_radius=10, fg_color="#5B299B", text_color="white")
+btn_conta = ctk.CTkButton(app_frame, text="Conta", width=80, corner_radius=10, fg_color="#5B299B", text_color="white", command=mostrar_dados_utilizador)
 btn_conta.grid(row=0, column=1, padx=20, pady=10, sticky="e")
 
 # Menu lateral 

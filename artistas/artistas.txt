@@ -1,0 +1,33 @@
+[rock]
+artistas: Queen, Led Zeppelin, Nirvana
+
+[pop]
+artistas: Michael Jackson, Madonna, Britney Spears
+
+[jazz]
+artistas: Miles Davis, John Coltrane, Ella Fitzgerald
+
+[rap]
+artistas: Playboi Carti, Future, Travis Scott, Kanye West
+
+[Playboi Carti]
+músicas: Magnolia, Long Time, Location
+álbuns: Die Lit, Whole Lotta Red, Self Titled
+álbuns_imagens: artistas/rap/Die Lit.png, artistas/rap/Whole Lotta Red.png, artistas/rap/Self Titled.png
+
+[Future]
+músicas: Mask Off, Life Is Good, Low Life
+álbuns: DS2, High Off Life, Future Hndrxx Presents: The WIZRD
+álbuns_imagens: artistas/rap/DS2.png, artistas/rap/High Off Life.png, artistas/rap/The WIZRD.png
+
+[Travis Scott]
+músicas: Sicko Mode, Goosebumps, Antidote
+álbuns: Rodeo, Birds in the Trap Sing McKnight, Astroworld, Utopia
+álbuns_imagens: artistas/rap/Rodeo.png, artistas/rap/Birds in the Trap.png, artistas/rap/Astroworld.png
+
+[Kanye West]
+músicas: Stronger, Heartless, Runaway
+álbuns: Graduation, The College Dropout, My Beautiful Dark Twisted Fantasy
+álbuns_imagens: artistas/rap/Graduation.png, artistas/rap/The College Dropout.png, artistas/rap/My Beautiful Dark Twisted Fantasy.png
+
+    

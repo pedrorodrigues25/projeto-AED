@@ -7,6 +7,7 @@ import time
 from mutagen.mp3 import MP3
 import pygame
 import tkinter as tk
+from PIL import Image, ImageTk, ImageDraw
 
 pygame.mixer.init()
 sincronizando_barra = False  # Para evitar conflitos durante o clique
@@ -20,7 +21,7 @@ ctk.set_default_color_theme("dark-blue")
 biblioteca_musicas = {}
 musica_atual = None
 player_ativo = False
-utilizador_atual = None
+usuario_atual = None
 musicas_recentemente_tocadas = []
 base_path = "artistas/"
 
@@ -157,25 +158,25 @@ def atualizar_lista_musicas():
 
 # Funções de autenticação
 def login():
-    utilizador = utilizador_entry.get().strip()
+    usuario = usuario_entry.get().strip()
     senha = senha_entry.get().strip()
 
-    if not utilizador or not senha:
+    if not usuario or not senha:
         messagebox.showerror("Erro", "Por favor, preencha todos os campos.")
         return
 
-    caminho_utilizador = os.path.join("dados_utilizador", utilizador)
+    caminho_usuario = os.path.join("dados_usuarios", usuario)
 
-    if os.path.exists(caminho_utilizador):
-        f = open(os.path.join(caminho_utilizador, "dados.txt"), "r")
+    if os.path.exists(caminho_usuario):
+        f = open(os.path.join(caminho_usuario, "dados.txt"), "r")
         dados = f.readlines()
         f.close()
         senha_correta = dados[1].split(": ")[1].strip()
 
 
         if senha == senha_correta:
-                global utilizador_atual
-                utilizador_atual = utilizador
+                global usuario_atual
+                usuario_atual = usuario
                 login_frame.pack_forget()
                 app_frame.pack(expand=True, fill="both", padx=20, pady=20)
                 return
@@ -183,13 +184,13 @@ def login():
     messagebox.showerror("Erro", "Usuário ou senha incorretos.")
 
 def criar_conta():
-    novo_utilizador = novo_utilizador_entry.get().strip()
+    novo_usuario = novo_usuario_entry.get().strip()
     nova_senha = nova_senha_entry.get().strip()
     confirmar_senha = confirmar_senha_entry.get().strip()
 
-    caminho_utilizador = os.path.join("dados_utilizador", novo_utilizador)
+    caminho_usuario = os.path.join("dados_usuarios", novo_usuario)
 
-    if not novo_utilizador or not nova_senha or not confirmar_senha:
+    if not novo_usuario or not nova_senha or not confirmar_senha:
         messagebox.showerror("Erro", "Por favor, preencha todos os campos.")
         return
 
@@ -197,13 +198,13 @@ def criar_conta():
         messagebox.showerror("Erro", "As senhas não coincidem.")
         return
 
-    if os.path.exists(caminho_utilizador):
+    if os.path.exists(caminho_usuario):
         messagebox.showerror("Erro", "Nome de usuário já está em uso.")
         return
 
-    os.makedirs(caminho_utilizador)
-    f = open(os.path.join(caminho_utilizador, "dados.txt"), "w")
-    f.write(f"Usuário: {novo_utilizador}\nSenha: {nova_senha}")
+    os.makedirs(caminho_usuario)
+    f = open(os.path.join(caminho_usuario, "dados.txt"), "w")
+    f.write(f"Usuário: {novo_usuario}\nSenha: {nova_senha}")
     f.close()
 
 
@@ -216,21 +217,23 @@ def mostrar_tela_criar_conta():
     login_frame.pack_forget()
     criar_conta_frame.pack(expand=True, fill="both", padx=20, pady=20)
 
-def mostrar_dados_utilizador():
+def mostrar_dados_usuario():
     """Exibe os dados do usuário na área do conteúdo quando o botão 'Conta' é clicado, ou mantém o conteúdo atual caso não haja usuário logado."""
-    global utilizador_atual
+    global usuario_atual
 
-    if utilizador_atual:
+    if usuario_atual:
         # Limpar o conteúdo atual do frame
         for widget in conteudo_frame.winfo_children():
             widget.destroy()
 
-        caminho_utilizador = os.path.join("dados_utilizador", utilizador_atual, "dados.txt")
+        caminho_usuario = os.path.join("dados_usuarios", usuario_atual, "dados.txt")
 
-        if os.path.exists(caminho_utilizador):
-            f = open(caminho_utilizador, "r")
-            dados = f.read()
-            f.close()
+        if os.path.exists(caminho_usuario):
+            f = open(caminho_usuario, "r")
+            try:
+                dados = f.read()
+            finally:
+                f.close()
 
             # Exibe os dados do usuário no frame
             dados_label = ctk.CTkLabel(conteudo_frame, text=dados, font=("Roboto", 16))
@@ -267,11 +270,14 @@ def salvar_biblioteca_musicas():
     caminho_arquivo_biblioteca = os.path.join(pasta_biblioteca, 'biblioteca_musicas.txt')
     try:
         f = open(caminho_arquivo_biblioteca, 'w')
-        for nome, dados in biblioteca_musicas.items():
-            f.write(f"{nome}|{dados['caminho']}|{dados['like']}\n")
-        f.close()
+        try:
+            for nome, dados in biblioteca_musicas.items():
+                f.write(f"{nome}|{dados['like']}\n")
+        finally:
+            f.close()
     except Exception as e:
         print(f"Erro ao salvar a biblioteca de músicas: {e}")
+
 
 def carregar_biblioteca_musicas():
     caminho_arquivo_biblioteca = os.path.join(pasta_biblioteca, 'biblioteca_musicas.txt')
@@ -279,10 +285,18 @@ def carregar_biblioteca_musicas():
         if os.path.exists(caminho_arquivo_biblioteca):
             biblioteca = {}
             f = open(caminho_arquivo_biblioteca, 'r')
-            for linha in f:
-                nome, caminho, like = linha.strip().split('|')
-                biblioteca[nome] = {"caminho": caminho, "like": like == 'True'}
-            f.close()
+            try:
+                for linha in f:
+                    # Certifique-se de que a linha tenha exatamente dois elementos após a divisão
+                    partes = linha.strip().split('|')
+                    if len(partes) == 2:
+                        nome, like = partes
+                        caminho_completo = os.path.join(pasta_biblioteca, nome)
+                        biblioteca[nome] = {"caminho": caminho_completo, "like": like == 'True'}
+                    else:
+                        print(f"Formato inválido na linha: {linha}")
+            finally:
+                f.close()
             return biblioteca
     except Exception as e:
         print(f"Erro ao carregar a biblioteca de músicas: {e}")
@@ -297,24 +311,25 @@ def salvar_musicas_recentemente_tocadas():
     caminho_arquivo_recent = os.path.join(pasta_biblioteca, 'musicas_recentemente_tocadas.txt')
     try:
         f = open(caminho_arquivo_recent, 'w')
-        for musica in musicas_recentemente_tocadas:
-            f.write(f"{musica}\n")
-        f.close()
+        try:
+            for musica in musicas_recentemente_tocadas:
+                f.write(f"{musica}\n")
+        finally:
+            f.close()
     except Exception as e:
-        print(f"Erro ao salvar músicas recentemente tocadas: {e}")
+        print(f"Erro ao salvar músicas recentes: {e}")
 
 def carregar_musicas_recentemente_tocadas():
     caminho_arquivo_recent = os.path.join(pasta_biblioteca, 'musicas_recentemente_tocadas.txt')
     try:
         if os.path.exists(caminho_arquivo_recent):
-            musicas = []
             f = open(caminho_arquivo_recent, 'r')
-            for linha in f:
-                musicas.append(linha.strip())
-            f.close()
-            return musicas
+            try:
+                return [linha.strip() for linha in f]
+            finally:
+                f.close()
     except Exception as e:
-        print(f"Erro ao carregar músicas recentemente tocadas: {e}")
+        print(f"Erro ao carregar músicas recentes: {e}")
     return []
 
 def alterar_volume(valor):
@@ -348,11 +363,34 @@ def carregar_artistas_por_genero():
 
 # Função para mostrar os artistas no frame
 def mostrar_artistas(genero_selecionado):
-    if not genero_selecionado:  # Verifica se nenhum gênero foi selecionado
+    if not genero_selecionado:
         messagebox.showwarning("Seleção de Gênero", "Por favor, selecione um gênero de música!")
-        return  # Não faz nada se não for selecionado
+        return
 
-    artistas_por_genero = carregar_artistas_por_genero()
+    caminho_arquivo = os.path.join(base_path, "artistas.txt")
+    artistas_por_genero = {}
+
+    # Lê o arquivo e organiza os artistas por gênero
+    try:
+        f = open(caminho_arquivo, "r", encoding="utf-8")
+        try:
+            categoria_atual = None
+            for linha in f:
+                linha = linha.strip()
+                if linha.startswith("[") and linha.endswith("]"):
+                    categoria_atual = linha[1:-1]
+                    if categoria_atual not in artistas_por_genero:
+                        artistas_por_genero[categoria_atual] = []
+                elif linha.startswith("artistas:") and categoria_atual:
+                    artistas = linha.split(":")[1].strip().split(", ")
+                    artistas_por_genero[categoria_atual].extend(artistas)
+        finally:
+            f.close()
+    except FileNotFoundError:
+        messagebox.showerror("Erro", f"Arquivo não encontrado: {caminho_arquivo}")
+        return
+
+    # Obter artistas do gênero selecionado
     artistas = artistas_por_genero.get(genero_selecionado, [])
 
     # Limpar o frame de conteúdo
@@ -360,12 +398,52 @@ def mostrar_artistas(genero_selecionado):
         widget.destroy()
 
     if artistas:
+        row, col = 0, 0
         for artista in artistas:
-            label_artista = tk.Label(conteudo_frame, text=artista, font=("Helvetica", 14), bg="#f0f0f0", fg="#333", relief="solid", padx=10, pady=5)
-            label_artista.pack(pady=5, fill="x")
+            imagem_path = os.path.join(base_path, genero_selecionado, f"{artista}.png")
+
+            if os.path.exists(imagem_path):
+                try:
+                    # Criar imagem circular
+                    img = Image.open(imagem_path).resize((100, 100))
+                    mask = Image.new("L", (100, 100), 0)
+                    draw = ImageDraw.Draw(mask)
+                    draw.ellipse((0, 0, 100, 100), fill=255)
+                    img = Image.composite(img, Image.new("RGB", (100, 100), (0, 0, 0)), mask)
+                    img = ImageTk.PhotoImage(img)
+
+                    # Criar frame para artista
+                    artista_frame = tk.Frame(conteudo_frame, bg="#f0f0f0")
+                    artista_frame.grid(row=row, column=col, padx=10, pady=10)
+
+                    img_label = tk.Label(artista_frame, image=img, bg="#f0f0f0")
+                    img_label.image = img
+                    img_label.pack()
+
+                    nome_label = tk.Label(artista_frame, text=artista, font=("Helvetica", 12), bg="#f0f0f0")
+                    nome_label.pack()
+
+                    # Vincula a função para exibir detalhes
+                    img_label.bind("<Button-1>", lambda e, nome=artista: mostrar_detalhes_artista(nome))
+                    nome_label.bind("<Button-1>", lambda e, nome=artista: mostrar_detalhes_artista(nome))
+
+                    col += 1
+                    if col > 3:
+                        col = 0
+                        row += 1
+
+                except Exception as e:
+                    print(f"Erro ao carregar imagem para {artista}: {e}")
+
     else:
-        label_nenhum_artista = tk.Label(conteudo_frame, text="Nenhum artista encontrado", font=("Helvetica", 14, "italic"), bg="#f0f0f0", fg="#888", padx=10, pady=5)
-        label_nenhum_artista.pack(pady=5, fill="x")
+        label_nenhum_artista = tk.Label(
+            conteudo_frame,
+            text="Nenhum artista encontrado",
+            font=("Helvetica", 14, "italic"),
+            bg="#f0f0f0",
+            fg="#888"
+        )
+        label_nenhum_artista.pack(pady=10, fill="x")
 
 # Função para mostrar o menu de seleção de artistas
 def mostrar_menu_artistas():
@@ -374,8 +452,7 @@ def mostrar_menu_artistas():
         widget.destroy()
 
     # Lista de gêneros de música
-    generos = ["rock", "pop", "hiphop", "jazz", "eletronica", "rap"
-               ]
+    generos = ["rock", "pop", "hiphop", "jazz", "eletronica", "rap"]
 
     # Criar um botão para cada gênero
     for genero in generos:
@@ -391,7 +468,110 @@ def mostrar_menu_artistas():
             corner_radius=10
         )
         btn_genero.pack(padx=20, pady=10, fill="x")
-    
+
+def carregar_artistas_com_detalhes():
+    artistas = {}
+    base_path = "artistas"  # Pasta base contendo os arquivos
+    for genero in os.listdir(base_path):
+        genero_path = os.path.join(base_path, genero)
+        if os.path.isdir(genero_path):
+            for artista_folder in os.listdir(genero_path):
+                artista_path = os.path.join(genero_path, artista_folder)
+                if os.path.isdir(artista_path):
+                    artistas[artista_folder] = {"álbuns": [], "músicas": []}
+                    albuns_path = os.path.join(artista_path, "álbuns")
+                    musicas_path = os.path.join(artista_path, "músicas")
+
+                    # Carregar álbuns
+                    if os.path.exists(albuns_path):
+                        artistas[artista_folder]["álbuns"] = os.listdir(albuns_path)
+
+                    # Carregar músicas
+                    if os.path.exists(musicas_path):
+                        artistas[artista_folder]["músicas"] = os.listdir(musicas_path)
+    return artistas
+
+def mostrar_detalhes_artista(artista_selecionado):
+    caminho_arquivo = os.path.join(base_path, "artistas.txt")
+    detalhes_artista = {}
+
+    # Lê detalhes do artista
+    try:
+        f = open(caminho_arquivo, "r", encoding="utf-8")
+        try:
+            linhas = f.readlines()
+
+            for i, linha in enumerate(linhas):
+                if linha.strip() == f"[{artista_selecionado}]":
+                    for j in range(i + 1, len(linhas)):
+                        if linhas[j].startswith("["):  # Encerra quando encontra o próximo bloco
+                            break
+                        linha_stripped = linhas[j].strip()
+                        if ": " in linha_stripped:  # Garantir que há chave: valor
+                            chave, valor = linha_stripped.split(": ", 1)
+                            detalhes_artista[chave] = valor.split(", ")
+                        else:
+                            print(f"Linha inválida ignorada: {linha_stripped}")
+        finally:
+            f.close()
+    except FileNotFoundError:
+        messagebox.showerror("Erro", f"Arquivo não encontrado: {caminho_arquivo}")
+        return
+
+    # Limpar o frame principal
+    for widget in conteudo_frame.winfo_children():
+        widget.destroy()
+
+    # Configurar fundo preto
+    conteudo_frame.configure(fg_color="black")
+
+    # Título do Artista
+    artista_label = ctk.CTkLabel(conteudo_frame, text=artista_selecionado, font=("Helvetica", 18, "bold"), fg_color="black", text_color="white")
+    artista_label.pack(pady=10)
+
+    # Frame para Álbuns
+    albuns_frame = ctk.CTkFrame(conteudo_frame, fg_color="black")
+    albuns_frame.pack(fill="x", pady=10)
+
+    # Centralizar os álbuns
+    albuns_inner_frame = tk.Frame(albuns_frame, bg="black")
+    albuns_inner_frame.pack(side="top", pady=10)
+
+    albuns = detalhes_artista.get("álbuns", [])
+    albuns_imagens = detalhes_artista.get("álbuns_imagens", [])
+
+    for i, (album, imagem_path) in enumerate(zip(albuns, albuns_imagens)):
+        if os.path.exists(imagem_path):
+            img = Image.open(imagem_path).resize((100, 100))
+            img = ImageTk.PhotoImage(img)
+
+            # Frame para cada álbum
+            album_frame = tk.Frame(albuns_inner_frame, bg="black")
+            album_frame.pack(side="left", padx=20)  # Espaçamento entre os álbuns
+
+            img_label = tk.Label(album_frame, image=img, bg="black")
+            img_label.image = img  # Referência para a imagem
+            img_label.pack()
+
+            album_label = tk.Label(album_frame, text=album, font=("Helvetica", 12), bg="black", fg="white")
+            album_label.pack()
+
+    # Frame para Músicas
+    musicas_frame = ctk.CTkFrame(conteudo_frame, fg_color="black")
+    musicas_frame.pack(fill="x", pady=20)
+
+    musicas = detalhes_artista.get("músicas", [])
+    if musicas:
+        musicas_label = ctk.CTkLabel(musicas_frame, text="Músicas", font=("Helvetica", 16, "bold"), fg_color="black", text_color="white")
+        musicas_label.pack(pady=10)
+
+        for musica in musicas:
+            musica_label = tk.Label(musicas_frame, text=musica, font=("Helvetica", 12), bg="black", fg="white")
+            musica_label.pack(pady=5)
+    else:
+        no_music_label = tk.Label(musicas_frame, text="Nenhuma música disponível.", font=("Helvetica", 12), bg="black", fg="white")
+        no_music_label.pack(pady=5)
+        
 
 app = ctk.CTk()
 app.title("MusicWave")
@@ -406,8 +586,8 @@ login_frame.pack(expand=True, fill="both", padx=20, pady=20)
 login_label = ctk.CTkLabel(login_frame, text="Login", font=("Roboto", 24, "bold"))
 login_label.pack(pady=20)
 
-utilizador_entry = ctk.CTkEntry(login_frame, placeholder_text="Utilizador", width=522, height=33)
-utilizador_entry.pack(pady=10, padx=20)
+usuario_entry = ctk.CTkEntry(login_frame, placeholder_text="Usuário", width=522, height=33)
+usuario_entry.pack(pady=10, padx=20)
 
 senha_entry = ctk.CTkEntry(login_frame, placeholder_text="Senha", show="*", width=522, height=33)
 senha_entry.pack(pady=10, padx=20)
@@ -434,8 +614,8 @@ criar_conta_frame = ctk.CTkFrame(app, corner_radius=10)
 criar_conta_label = ctk.CTkLabel(criar_conta_frame, text="Criar Conta", font=("Roboto", 24, "bold"))
 criar_conta_label.pack(pady=20)
 
-novo_utilizador_entry = ctk.CTkEntry(criar_conta_frame, placeholder_text="Novo Utilizador", width=522, height=33)
-novo_utilizador_entry.pack(pady=10, padx=20)
+novo_usuario_entry = ctk.CTkEntry(criar_conta_frame, placeholder_text="Novo Usuário", width=522, height=33)
+novo_usuario_entry.pack(pady=10, padx=20)
 
 
 nova_senha_entry = ctk.CTkEntry(criar_conta_frame, placeholder_text="Senha", show="*", width=522, height=33)
@@ -496,7 +676,7 @@ conteudo_frame.grid(row=1, column=1, sticky="nsew", padx=10, pady=10)
 conteudo_label = ctk.CTkLabel(conteudo_frame, text="Bem-vindo", font=("Roboto", 26, "bold"))
 conteudo_label.grid(row=0, column=0, padx=20, pady=10, sticky="w")
 
-btn_conta = ctk.CTkButton(app_frame, text="Conta", width=80, corner_radius=10, fg_color="#5B299B", text_color="white", command=mostrar_dados_utilizador)
+btn_conta = ctk.CTkButton(app_frame, text="Conta", width=80, corner_radius=10, fg_color="#5B299B", text_color="white", command=mostrar_dados_usuario)
 btn_conta.grid(row=0, column=1, padx=20, pady=10, sticky="e")
 
 recent_label = ctk.CTkLabel(conteudo_frame, text="Ouvido recentemente", font=("Roboto", 18))
@@ -542,8 +722,8 @@ volume_slider.pack(side="right", padx=20)
 
 # Função para sair
 def logout():
-    global utilizador_atual
-    utilizador_atual = None
+    global usuario_atual
+    usuario_atual = None
     app_frame.pack_forget()
     login_frame.pack(expand=True, fill="both", padx=20, pady=20)
 

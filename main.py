@@ -228,8 +228,9 @@ def mostrar_dados_utilizador():
         caminho_utilizador = os.path.join("dados_utilizador", utilizador_atual, "dados.txt")
 
         if os.path.exists(caminho_utilizador):
-            with open(caminho_utilizador, "r") as f:
-                dados = f.read()
+            f = open(caminho_utilizador, "r")
+            dados = f.read()
+            f.close()
 
             # Exibe os dados do usuário no frame
             dados_label = ctk.CTkLabel(conteudo_frame, text=dados, font=("Roboto", 16))
@@ -265,9 +266,10 @@ def mostrar_biblioteca():
 def salvar_biblioteca_musicas():
     caminho_arquivo_biblioteca = os.path.join(pasta_biblioteca, 'biblioteca_musicas.txt')
     try:
-        with open(caminho_arquivo_biblioteca, 'w') as f:
-            for nome, dados in biblioteca_musicas.items():
-                f.write(f"{nome}|{dados['caminho']}|{dados['like']}\n")
+        f = open(caminho_arquivo_biblioteca, 'w')
+        for nome, dados in biblioteca_musicas.items():
+            f.write(f"{nome}|{dados['caminho']}|{dados['like']}\n")
+        f.close()
     except Exception as e:
         print(f"Erro ao salvar a biblioteca de músicas: {e}")
 
@@ -276,10 +278,11 @@ def carregar_biblioteca_musicas():
     try:
         if os.path.exists(caminho_arquivo_biblioteca):
             biblioteca = {}
-            with open(caminho_arquivo_biblioteca, 'r') as f:
-                for linha in f:
-                    nome, caminho, like = linha.strip().split('|')
-                    biblioteca[nome] = {"caminho": caminho, "like": like == 'True'}
+            f = open(caminho_arquivo_biblioteca, 'r')
+            for linha in f:
+                nome, caminho, like = linha.strip().split('|')
+                biblioteca[nome] = {"caminho": caminho, "like": like == 'True'}
+            f.close()
             return biblioteca
     except Exception as e:
         print(f"Erro ao carregar a biblioteca de músicas: {e}")
@@ -293,20 +296,25 @@ def atualizar_recents():
 def salvar_musicas_recentemente_tocadas():
     caminho_arquivo_recent = os.path.join(pasta_biblioteca, 'musicas_recentemente_tocadas.txt')
     try:
-        with open(caminho_arquivo_recent, 'w') as f:
-            for musica in musicas_recentemente_tocadas:
-                f.write(f"{musica}\n")
+        f = open(caminho_arquivo_recent, 'w')
+        for musica in musicas_recentemente_tocadas:
+            f.write(f"{musica}\n")
+        f.close()
     except Exception as e:
-        print(f"Erro ao salvar músicas recentes: {e}")
+        print(f"Erro ao salvar músicas recentemente tocadas: {e}")
 
 def carregar_musicas_recentemente_tocadas():
     caminho_arquivo_recent = os.path.join(pasta_biblioteca, 'musicas_recentemente_tocadas.txt')
     try:
         if os.path.exists(caminho_arquivo_recent):
-            with open(caminho_arquivo_recent, 'r') as f:
-                return [linha.strip() for linha in f]
+            musicas = []
+            f = open(caminho_arquivo_recent, 'r')
+            for linha in f:
+                musicas.append(linha.strip())
+            f.close()
+            return musicas
     except Exception as e:
-        print(f"Erro ao carregar músicas recentes: {e}")
+        print(f"Erro ao carregar músicas recentemente tocadas: {e}")
     return []
 
 def alterar_volume(valor):

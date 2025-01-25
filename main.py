@@ -1,5 +1,5 @@
 import customtkinter as ctk
-from tkinter import filedialog, messagebox
+from tkinter import filedialog, messagebox, simpledialog
 import os
 import shutil
 import threading
@@ -24,6 +24,7 @@ player_ativo = False
 utilizador_atual = None
 musicas_recentemente_tocadas = []
 base_path = "artistas/"
+playlists = {}
 
 
 
@@ -140,48 +141,35 @@ def alterar_posicao(event):
 
 
 
-def atualizar_lista_musicas():
-    # Carregar a biblioteca de músicas ao iniciar
-    biblioteca_musicas = carregar_biblioteca_musicas()
-
+def atualizar_lista_musicas(mostrar_botoes=False):
+    """Atualiza a lista de músicas na interface, com opção de mostrar botões de ação."""
+    # Limpar widgets antigos no frame de músicas
     for widget in music_grid_frame.winfo_children():
         widget.destroy()
 
-    for nome, dados in biblioteca_musicas.items():
-        cor = "red" if dados["like"] else "white"
-        musica_button = ctk.CTkButton(music_grid_frame, 
-                                      text=nome, 
-                                      fg_color=cor, 
-                                      text_color="black",
-                                      command=lambda nome=nome: selecionar_musica(nome))
-        musica_button.pack(padx=10, pady=10, fill="x")
+    # Exibir as músicas
+    for nome_musica in biblioteca_musicas.keys():
+        frame_musica = tk.Frame(music_grid_frame)
+        frame_musica.pack(fill="x", padx=10, pady=5)
+
+        # Nome da música
+        label_musica = tk.Label(frame_musica, text=nome_musica, font=("Helvetica", 12))
+        label_musica.pack(side="left", padx=5)
+
+        # Botão para adicionar à playlist (se ativado)
+        if mostrar_botoes:
+            botao_adicionar = tk.Button(
+                frame_musica,
+                text="+",
+                font=("Helvetica", 10, "bold"),
+                bg="#5B299B",
+                fg="white",
+                command=lambda nome=nome_musica: adicionar_a_playlist(nome)
+            )
+            botao_adicionar.pack(side="right", padx=5)
 
 # Funções de autenticação
-def login():
-    utilizador = utilizador_entry.get().strip()
-    senha = senha_entry.get().strip()
 
-    if not utilizador or not senha:
-        messagebox.showerror("Erro", "Por favor, preencha todos os campos.")
-        return
-
-    caminho_utilizador = os.path.join("dados_utilizador", utilizador)
-
-    if os.path.exists(caminho_utilizador):
-        f = open(os.path.join(caminho_utilizador, "dados.txt"), "r")
-        dados = f.readlines()
-        f.close()
-        senha_correta = dados[1].split(": ")[1].strip()
-
-
-        if senha == senha_correta:
-                global utilizador_atual
-                utilizador_atual = utilizador
-                login_frame.pack_forget()
-                app_frame.pack(expand=True, fill="both", padx=20, pady=20)
-                return
-
-    messagebox.showerror("Erro", "Utilizador ou senha incorretos.")
 
 def criar_conta():
     novo_utilizador = novo_utilizador_entry.get().strip()
@@ -252,7 +240,7 @@ def mostrar_tela_admin():
     remover_utilizador_button.pack(pady=10)
 
 def login():
-    global utilizador_atual
+    global utilizador_atual, playlists
     utilizador = utilizador_entry.get().strip()
     senha = senha_entry.get().strip()
 
@@ -269,13 +257,13 @@ def login():
 
     caminho_utilizador = os.path.join("dados_utilizador", utilizador)
     if os.path.exists(caminho_utilizador):
-        f = open(os.path.join(caminho_utilizador, "dados.txt"), "r")
-        dados = f.readlines()
-        f.close()
+        with open(os.path.join(caminho_utilizador, "dados.txt"), "r") as f:
+            dados = f.readlines()
         senha_correta = dados[1].split(": ")[1].strip()
 
         if senha == senha_correta:
             utilizador_atual = utilizador
+            playlists = carregar_playlists()  # Carrega as playlists do utilizador
             login_frame.pack_forget()
             app_frame.pack(expand=True, fill="both", padx=20, pady=20)
             return
@@ -288,31 +276,44 @@ def mostrar_tela_criar_conta():
     criar_conta_frame.pack(expand=True, fill="both", padx=20, pady=20)
 
 def mostrar_dados_utilizador():
-    """Exibe os dados do utilizador na área do conteúdo quando o botão 'Conta' é clicado, ou mantém o conteúdo atual caso não haja utilizador logado."""
+    """Mostra os dados do utilizador ou solicita login caso esteja como convidado."""
     global utilizador_atual
 
-    if utilizador_atual:
-        # Limpar o conteúdo atual do frame
-        for widget in conteudo_frame.winfo_children():
-            widget.destroy()
+    if not utilizador_atual:  # Caso o utilizador seja convidado
+        resposta = messagebox.askyesno(
+            "Login Necessário",
+            "Você entrou como convidado. Deseja fazer login para acessar esta funcionalidade?"
+        )
+        if resposta:
+            app_frame.pack_forget()
+            login_frame.pack(expand=True, fill="both", padx=20, pady=20)
+        return
 
-        caminho_utilizador = os.path.join("dados_utilizador", utilizador_atual, "dados.txt")
+    # Exibir tela de gerenciamento se o utilizador estiver logado
+    for widget in conteudo_frame.winfo_children():
+        widget.destroy()
 
-        if os.path.exists(caminho_utilizador):
-            f = open(caminho_utilizador, "r")
-            try:
-                dados = f.read()
-            finally:
-                f.close()
+    caminho_utilizador = os.path.join("dados_utilizador", utilizador_atual, "dados.txt")
+    if os.path.exists(caminho_utilizador):
+        with open(caminho_utilizador, "r") as f:
+            dados = f.read()
 
-            # Exibe os dados do utilizador no frame
-            dados_label = ctk.CTkLabel(conteudo_frame, text=dados, font=("Roboto", 16))
-            dados_label.pack(pady=20, padx=20)
-        else:
-            messagebox.showwarning("Erro", "Não foi possível encontrar os dados do utilizador.")
+        dados_label = ctk.CTkLabel(conteudo_frame, text=dados, font=("Roboto", 16))
+        dados_label.pack(pady=20, padx=20)
     else:
-        # Mostra uma mensagem de erro, mas não altera a tela
-        messagebox.showerror("Erro", "Nenhum utilizador está logado no momento.")
+        messagebox.showerror("Erro", "Não foi possível carregar os dados do utilizador.")
+
+    btn_logout = ctk.CTkButton(
+        conteudo_frame,
+        text="Logout",
+        command=logout,
+        fg_color="#FF0000",  # Cor vermelha para destaque
+        text_color="white",
+        width=200,
+        height=40,
+        corner_radius=15
+    )
+    btn_logout.pack(pady=20)
 
 def restaurar_tela_padrao():
     """Restaura o conteúdo padrão do frame."""
@@ -321,7 +322,7 @@ def restaurar_tela_padrao():
         widget.destroy()
 
 def mostrar_biblioteca():
-    """Exibe a lista de músicas carregadas na biblioteca."""
+    """Exibe a lista de músicas carregadas na biblioteca com botões para adicionar à playlist."""
     # Limpar o conteúdo atual do frame
     for widget in conteudo_frame.winfo_children():
         widget.destroy()
@@ -331,10 +332,29 @@ def mostrar_biblioteca():
 
     # Exibe as músicas na tela
     for i, nome_musica in enumerate(lista_musicas):
-        musica_button = ctk.CTkButton(conteudo_frame, 
-                                      text=nome_musica, 
-                                      command=lambda nome=nome_musica: selecionar_musica(nome))
-        musica_button.grid(row=i+1, column=0, padx=20, pady=5, sticky="w")
+        # Frame para cada música
+        frame_musica = tk.Frame(conteudo_frame)
+        frame_musica.grid(row=i+1, column=0, padx=20, pady=5, sticky="w")
+
+        # Botão para selecionar a música
+        musica_button = ctk.CTkButton(
+            frame_musica,
+            text=nome_musica,
+            command=lambda nome=nome_musica: selecionar_musica(nome),
+            width=300
+        )
+        musica_button.pack(side="left", padx=5)
+
+        # Botão para adicionar à playlist
+        botao_adicionar = tk.Button(
+            frame_musica,
+            text="+",
+            font=("Helvetica", 10, "bold"),
+            bg="#5B299B",
+            fg="white",
+            command=lambda nome=nome_musica: adicionar_a_playlist(nome)
+        )
+        botao_adicionar.pack(side="right", padx=5)
 
 def salvar_biblioteca_musicas():
     caminho_arquivo_biblioteca = os.path.join(pasta_biblioteca, 'biblioteca_musicas.txt')
@@ -642,6 +662,137 @@ def mostrar_detalhes_artista(artista_selecionado):
         no_music_label = tk.Label(musicas_frame, text="Nenhuma música disponível.", font=("Helvetica", 12), bg="black", fg="white")
         no_music_label.pack(pady=5)
         
+        
+def salvar_playlists():
+    global utilizador_atual
+
+    if not utilizador_atual:
+        return
+
+    caminho_utilizador = os.path.join("dados_utilizador", utilizador_atual)
+    caminho_playlists = os.path.join(caminho_utilizador, "playlists.txt")
+
+    try:
+        with open(caminho_playlists, "w", encoding="utf-8") as f:
+            for nome_playlist, musicas in playlists.items():
+                f.write(f"{nome_playlist}:{','.join(musicas)}\n")
+    except Exception as e:
+        print(f"Erro ao salvar playlists: {e}")
+
+def carregar_playlists():
+    global playlists
+    if not utilizador_atual:
+        return {}
+
+    caminho_utilizador = os.path.join("dados_utilizador", utilizador_atual)
+    caminho_playlists = os.path.join(caminho_utilizador, "playlists.txt")
+    
+    if not os.path.exists(caminho_playlists):
+        return {}
+    
+    playlists_carregadas = {}
+    try:
+        with open(caminho_playlists, "r", encoding="utf-8") as f:
+            for linha in f:
+                partes = linha.strip().split(":")
+                if len(partes) == 2:
+                    nome_playlist, musicas = partes
+                    playlists_carregadas[nome_playlist] = musicas.split(",") if musicas else []
+    except Exception as e:
+        print(f"Erro ao carregar playlists: {e}")
+    
+    return playlists_carregadas
+
+def logout():
+    global utilizador_atual, playlists
+    salvar_playlists()  # Salva as playlists antes de fazer logout
+    utilizador_atual = None
+    playlists = {}  # Limpa as playlists em memória
+    app_frame.pack_forget()
+    login_frame.pack(expand=True, fill="both", padx=20, pady=20)
+
+def mostrar_playlists():
+    global playlists 
+    """Exibe as playlists e suas músicas."""
+    # Limpa o conteúdo atual do frame principal
+    for widget in conteudo_frame.winfo_children():
+        widget.destroy()
+
+    # Título
+    titulo_label = ctk.CTkLabel(conteudo_frame, text="Playlists", font=("Roboto", 24, "bold"))
+    titulo_label.pack(pady=10)
+
+    # Exibe cada playlist e suas músicas
+    for nome_playlist, musicas in playlists.items():
+        # Título da playlist
+        playlist_label = ctk.CTkLabel(conteudo_frame, text=nome_playlist, font=("Roboto", 18, "bold"))
+        playlist_label.pack(anchor="w", padx=10, pady=5)
+
+        # Exibe as músicas da playlist
+        if musicas:
+            for musica in musicas:
+                musica_label = ctk.CTkLabel(conteudo_frame, text=f"  - {musica}", font=("Roboto", 14))
+                musica_label.pack(anchor="w", padx=20)
+        else:
+            vazio_label = ctk.CTkLabel(conteudo_frame, text="  (Sem músicas)", font=("Roboto", 12, "italic"))
+            vazio_label.pack(anchor="w", padx=20)
+
+    # Botão para criar nova playlist
+    botao_criar = ctk.CTkButton(
+        conteudo_frame,
+        text="Criar Nova Playlist",
+        command=criar_playlist,  # Função para criar playlists
+        fg_color="#5B299B",
+        text_color="white",
+    )
+    botao_criar.pack(pady=20)
+
+def criar_playlist():
+    global playlists
+    """Cria uma nova playlist."""
+    nome_playlist = simpledialog.askstring("Nova Playlist", "Digite o nome da nova playlist:")
+    if nome_playlist:
+        if nome_playlist not in playlists:
+            playlists[nome_playlist] = []
+            messagebox.showinfo("Sucesso", f"Playlist '{nome_playlist}' criada.")
+            mostrar_playlists()  # Atualiza a interface
+        else:
+            messagebox.showerror("Erro", "Já existe uma playlist com esse nome.")
+
+
+def adicionar_a_playlist(nome_musica):
+    """Adiciona uma música a uma playlist selecionada."""
+    global playlists
+
+    if not playlists:
+        messagebox.showwarning("Aviso", "Não há playlists disponíveis. Crie uma antes de adicionar músicas.")
+        return
+
+    # Janela para selecionar a playlist
+    def selecionar_playlist(event):
+        playlist_selecionada = lista_playlists.get(lista_playlists.curselection())
+        if playlist_selecionada:
+            playlists[playlist_selecionada].append(nome_musica)
+            salvar_playlists()
+            messagebox.showinfo("Sucesso", f"Música '{nome_musica}' adicionada à playlist '{playlist_selecionada}'.")
+            janela_playlist.destroy()
+
+    # Criar a janela para exibir playlists
+    janela_playlist = tk.Toplevel(app)
+    janela_playlist.title("Selecionar Playlist")
+    janela_playlist.geometry("300x400")
+
+    label = tk.Label(janela_playlist, text="Selecione uma playlist:", font=("Helvetica", 14))
+    label.pack(pady=10)
+
+    lista_playlists = tk.Listbox(janela_playlist, height=10)
+    lista_playlists.pack(fill="both", expand=True, padx=10, pady=10)
+
+    for playlist in playlists.keys():
+        lista_playlists.insert("end", playlist)
+
+    lista_playlists.bind("<Double-1>", selecionar_playlist)
+
 
 app = ctk.CTk()
 app.title("MusicWave")
@@ -724,7 +875,7 @@ search_entry.pack(pady=10, padx=20, fill="x")
 btn_home = ctk.CTkButton(menu_frame, text="Home", width=180, corner_radius=5, fg_color="purple")
 btn_home.pack(pady=5)
 
-btn_playlists = ctk.CTkButton(menu_frame, text="Playlists", width=180, corner_radius=5)
+btn_playlists = ctk.CTkButton(menu_frame, text="Playlists", width=180, corner_radius=5, command=mostrar_playlists)
 btn_playlists.pack(pady=5)
 
 btn_albums = ctk.CTkButton(menu_frame, text="Álbuns", width=180, corner_radius=5)

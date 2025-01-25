@@ -257,8 +257,9 @@ def login():
 
     caminho_utilizador = os.path.join("dados_utilizador", utilizador)
     if os.path.exists(caminho_utilizador):
-        with open(os.path.join(caminho_utilizador, "dados.txt"), "r") as f:
-            dados = f.readlines()
+        f = open(os.path.join(caminho_utilizador, "dados.txt"), "r")
+        dados = f.readlines()
+        f.close()
         senha_correta = dados[1].split(": ")[1].strip()
 
         if senha == senha_correta:
@@ -295,8 +296,9 @@ def mostrar_dados_utilizador():
 
     caminho_utilizador = os.path.join("dados_utilizador", utilizador_atual, "dados.txt")
     if os.path.exists(caminho_utilizador):
-        with open(caminho_utilizador, "r") as f:
-            dados = f.read()
+        f = open(caminho_utilizador, "r")
+        dados = f.read()
+        f.close()
 
         dados_label = ctk.CTkLabel(conteudo_frame, text=dados, font=("Roboto", 16))
         dados_label.pack(pady=20, padx=20)
@@ -307,7 +309,7 @@ def mostrar_dados_utilizador():
         conteudo_frame,
         text="Logout",
         command=logout,
-        fg_color="#FF0000",  # Cor vermelha para destaque
+        fg_color="#FF0000",  
         text_color="white",
         width=200,
         height=40,
@@ -673,9 +675,10 @@ def salvar_playlists():
     caminho_playlists = os.path.join(caminho_utilizador, "playlists.txt")
 
     try:
-        with open(caminho_playlists, "w", encoding="utf-8") as f:
-            for nome_playlist, musicas in playlists.items():
-                f.write(f"{nome_playlist}:{','.join(musicas)}\n")
+        f = open(caminho_playlists, "w", encoding="utf-8")
+        for nome_playlist, musicas in playlists.items():
+            f.write(f"{nome_playlist}:{','.join(musicas)}\n")
+        f.close()
     except Exception as e:
         print(f"Erro ao salvar playlists: {e}")
 
@@ -692,12 +695,13 @@ def carregar_playlists():
     
     playlists_carregadas = {}
     try:
-        with open(caminho_playlists, "r", encoding="utf-8") as f:
-            for linha in f:
-                partes = linha.strip().split(":")
-                if len(partes) == 2:
-                    nome_playlist, musicas = partes
-                    playlists_carregadas[nome_playlist] = musicas.split(",") if musicas else []
+        f = open(caminho_playlists, "r", encoding="utf-8")
+        for linha in f:
+            partes = linha.strip().split(":")
+            if len(partes) == 2:
+                nome_playlist, musicas = partes
+                playlists_carregadas[nome_playlist] = musicas.split(",") if musicas else []
+        f.close()
     except Exception as e:
         print(f"Erro ao carregar playlists: {e}")
     

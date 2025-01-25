@@ -901,7 +901,7 @@ menu_frame.grid(row=1, column=0, sticky="nsw", padx=10, pady=10)
 # Adiciona imagem no menu lateral
 try:
     imagem_path = "./images/AED_logo_final.png"
-    imagem = ctk.CTkImage(Image.open(imagem_path), size=(70,80))
+    imagem = ctk.CTkImage(Image.open(imagem_path), size=(200,75))
     imagem_label = ctk.CTkLabel(menu_frame, image=imagem, text="")
     imagem_label.pack(pady=10)
 except Exception as e:

@@ -898,6 +898,15 @@ btn_conta.grid(row=0, column=1, padx=20, pady=10, sticky="e")
 menu_frame = ctk.CTkFrame(app_frame, width=200, corner_radius=10)
 menu_frame.grid(row=1, column=0, sticky="nsw", padx=10, pady=10)
 
+# Adiciona imagem no menu lateral
+try:
+    imagem_path = "./images/AED_logo_final.png"
+    imagem = ctk.CTkImage(Image.open(imagem_path), size=(70,80))
+    imagem_label = ctk.CTkLabel(menu_frame, image=imagem, text="")
+    imagem_label.pack(pady=10)
+except Exception as e:
+    print(f"Erro ao carregar a imagem: {e}")
+
 menu_label = ctk.CTkLabel(menu_frame, text="Música", font=("Roboto", 20, "bold"))
 menu_label.pack(pady=20)
 

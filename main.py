@@ -854,9 +854,9 @@ criar_conta_button.pack(pady=10)
 entrar_sem_login_label = ctk.CTkLabel(
     login_frame, 
     text="Entrar como convidado", 
-    text_color="lightcoral",  # Texto em vermelho claro
-    cursor="hand2",  # Cursor de mão para indicar que é clicável
-    font=("Roboto", 16)  # Fonte opcional para ajustar o estilo
+    text_color="lightcoral",  
+    cursor="hand2",  
+    font=("Roboto", 16) 
 )
 entrar_sem_login_label.pack(pady=10)
 entrar_sem_login_label.bind("<Button-1>", lambda e: [login_frame.pack_forget(), app_frame.pack(expand=True, fill="both", padx=20, pady=20)])

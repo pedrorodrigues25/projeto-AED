@@ -53,12 +53,40 @@ def carregar_musica():
         atualizar_lista_musicas()
         salvar_biblioteca_musicas()
 
+def mostrar_home():
+    """Exibe a tela inicial."""
+    # Limpar o conteúdo atual do frame principal
+    for widget in conteudo_frame.winfo_children():
+        widget.destroy()
+
+    conteudo_label = ctk.CTkLabel(conteudo_frame, text="Bem-vindo", font=("Roboto", 26, "bold"))
+    conteudo_label.grid(row=0, column=0, padx=20, pady=10, sticky="w")
+
+    recent_label = ctk.CTkLabel(conteudo_frame, text="Ouvido recentemente", font=("Roboto", 18))
+    recent_label.grid(row=1, column=0, padx=20, pady=10, sticky="w")
+
+    # Placeholder de músicas recentes
+    for i in range(3):
+        if i < len(musicas_recentemente_tocadas):
+            musica = musicas_recentemente_tocadas[i]
+            musica_button = ctk.CTkButton(conteudo_frame, text=musica, command=lambda musica=musica: selecionar_musica(musica))
+            musica_button.grid(row=2, column=i, padx=10, pady=10)
+        else:
+            placeholder = ctk.CTkFrame(conteudo_frame, width=150, height=150, fg_color="gray")
+            placeholder.grid(row=2, column=i, padx=10, pady=10)
+
+    # Grid para exibir músicas
+    music_grid_frame = ctk.CTkScrollableFrame(conteudo_frame, width=600, height=300)
+    music_grid_frame.grid(row=3, column=0, columnspan=3, sticky="nsew", padx=20, pady=10)
+
+    atualizar_lista_musicas()
+
 def selecionar_musica(nome):
     global musica_atual
     if nome in biblioteca_musicas:
         musica_atual = biblioteca_musicas[nome]["caminho"]
         status_label.configure(text=f"{nome}")
-
+        
 def tocar_musica():
     global player_ativo
     if musica_atual:
@@ -878,6 +906,9 @@ search_entry.pack(pady=10, padx=20, fill="x")
 
 btn_home = ctk.CTkButton(menu_frame, text="Home", width=180, corner_radius=5, fg_color="purple")
 btn_home.pack(pady=5)
+
+btn_home.pack(pady=5)
+btn_home.configure(command=mostrar_home)
 
 btn_playlists = ctk.CTkButton(menu_frame, text="Playlists", width=180, corner_radius=5, command=mostrar_playlists)
 btn_playlists.pack(pady=5)

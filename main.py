@@ -268,7 +268,7 @@ def mostrar_tela_admin():
     remover_utilizador_button.pack(pady=10)
 
 def login():
-    global utilizador_atual, playlists
+    global utilizador_atual, playlists, biblioteca_musicas, musicas_recentemente_tocadas
     utilizador = utilizador_entry.get().strip()
     senha = senha_entry.get().strip()
 
@@ -292,9 +292,12 @@ def login():
 
         if senha == senha_correta:
             utilizador_atual = utilizador
-            playlists = carregar_playlists()  # Carrega as playlists do utilizador
+            playlists = carregar_playlists()
+            biblioteca_musicas = carregar_biblioteca_musicas()
+            musicas_recentemente_tocadas = carregar_musicas_recentemente_tocadas()
             login_frame.pack_forget()
             app_frame.pack(expand=True, fill="both", padx=20, pady=20)
+            mostrar_home()  # Redireciona para a tela inicial
             return
 
     messagebox.showerror("Erro", "Utilizador ou senha incorretos.")
@@ -305,10 +308,10 @@ def mostrar_tela_criar_conta():
     criar_conta_frame.pack(expand=True, fill="both", padx=20, pady=20)
 
 def mostrar_dados_utilizador():
-    """Mostra os dados do utilizador ou solicita login caso esteja como convidado."""
+    """Mostra os dados do utilizador e opções de gerenciamento."""
     global utilizador_atual
 
-    if not utilizador_atual:  # Caso o utilizador seja convidado
+    if not utilizador_atual:
         resposta = messagebox.askyesno(
             "Login Necessário",
             "Você entrou como convidado. Deseja fazer login para acessar esta funcionalidade?"
@@ -318,32 +321,174 @@ def mostrar_dados_utilizador():
             login_frame.pack(expand=True, fill="both", padx=20, pady=20)
         return
 
-    # Exibir tela de gerenciamento se o utilizador estiver logado
     for widget in conteudo_frame.winfo_children():
         widget.destroy()
 
-    caminho_utilizador = os.path.join("dados_utilizador", utilizador_atual, "dados.txt")
-    if os.path.exists(caminho_utilizador):
-        f = open(caminho_utilizador, "r")
-        dados = f.read()
-        f.close()
+    # Caminho para a pasta do utilizador
+    caminho_utilizador = os.path.join("dados_utilizador", utilizador_atual)
+    if not os.path.exists(caminho_utilizador):
+        os.makedirs(caminho_utilizador)
 
-        dados_label = ctk.CTkLabel(conteudo_frame, text=dados, font=("Roboto", 16))
-        dados_label.pack(pady=20, padx=20)
-    else:
-        messagebox.showerror("Erro", "Não foi possível carregar os dados do utilizador.")
+    # Caminho para a imagem de perfil do utilizador
+    foto_perfil_path = os.path.join(caminho_utilizador, "perfil.png")
+
+    # Se a imagem não existir, cria um placeholder
+    if not os.path.exists(foto_perfil_path):
+        placeholder_image = Image.new("RGB", (80, 80), color="gray")  # Imagem cinza
+        placeholder_image.save(foto_perfil_path)
+
+    # Carregar e redimensionar a imagem
+    try:
+        imagem = Image.open(foto_perfil_path).resize((80, 80), Image.LANCZOS)
+        foto = ImageTk.PhotoImage(imagem)
+    except Exception as e:
+        messagebox.showerror("Erro", f"Não foi possível carregar a imagem de perfil: {e}")
+        return
+
+    # Moldura para informações do utilizador
+    frame_utilizador = ctk.CTkFrame(conteudo_frame, fg_color="#333", corner_radius=10)
+    frame_utilizador.pack(pady=20, padx=20, fill="x")
+
+    # Exibir foto de perfil
+    foto_label = tk.Label(frame_utilizador, image=foto, bg="#333")
+    foto_label.image = foto
+    foto_label.pack(side="left", padx=10, pady=10)
+
+    # Função para alterar foto de perfil
+    def alterar_foto_perfil():
+        caminho_imagem = filedialog.askopenfilename(
+            title="Selecionar Foto de Perfil",
+            filetypes=[("Imagens", "*.png *.jpg *.jpeg")]
+        )
+        if caminho_imagem:
+            try:
+                imagem = Image.open(caminho_imagem).resize((80, 80), Image.LANCZOS)
+                imagem.save(foto_perfil_path)
+                messagebox.showinfo("Sucesso", "Foto de perfil atualizada!")
+                mostrar_dados_utilizador()  # Atualiza a exibição da foto de perfil
+            except Exception as e:
+                messagebox.showerror("Erro", f"Não foi possível salvar a nova foto de perfil: {e}")
+
+    btn_alterar_foto = ctk.CTkButton(
+        frame_utilizador,
+        text="Alterar Foto",
+        command=alterar_foto_perfil,
+        fg_color="#FFA500",
+        text_color="white",
+        width=100,
+        height=30,
+        corner_radius=10,
+    )
+    btn_alterar_foto.pack(side="left", padx=10, pady=10)
+
+    # Exibir nome do utilizador
+    nome_label = ctk.CTkLabel(
+        frame_utilizador,
+        text=f"@{utilizador_atual}",
+        font=("Roboto", 20, "bold"),
+        text_color="white",
+    )
+    nome_label.pack(pady=10)
+
+    subtitulo_label = ctk.CTkLabel(
+        frame_utilizador,
+        text="Conta Pessoal",
+        font=("Roboto", 16),
+        text_color="gray",
+    )
+    subtitulo_label.pack(pady=5)
+
+    # Botões de gerenciamento
+    btn_editar = ctk.CTkButton(
+        conteudo_frame,
+        text="Editar Dados",
+        command=abrir_janela_editar_dados,
+        fg_color="#FFA500",
+        text_color="white",
+        width=200,
+        height=40,
+        corner_radius=15,
+    )
+    btn_editar.pack(pady=10)
+
+    btn_excluir = ctk.CTkButton(
+        conteudo_frame,
+        text="Excluir Conta",
+        command=excluir_conta,
+        fg_color="#FF0000",
+        text_color="white",
+        width=200,
+        height=40,
+        corner_radius=15,
+    )
+    btn_excluir.pack(pady=10)
 
     btn_logout = ctk.CTkButton(
         conteudo_frame,
         text="Logout",
         command=logout,
-        fg_color="#FF0000",  
+        fg_color="#5B299B",
         text_color="white",
         width=200,
         height=40,
-        corner_radius=15
+        corner_radius=15,
     )
     btn_logout.pack(pady=20)
+
+
+def abrir_janela_editar_dados():
+    """Abre uma nova janela para editar os dados do utilizador."""
+    global utilizador_atual
+
+    janela_editar = tk.Toplevel(app)
+    janela_editar.title("Editar Dados")
+    janela_editar.geometry("400x300")
+
+    label_nome = tk.Label(janela_editar, text="Novo Nome de Utilizador:", font=("Arial", 12))
+    label_nome.pack(pady=10)
+
+    entrada_nome = tk.Entry(janela_editar, font=("Arial", 12))
+    entrada_nome.insert(0, utilizador_atual)
+    entrada_nome.pack(pady=10)
+
+    label_senha = tk.Label(janela_editar, text="Nova Senha:", font=("Arial", 12))
+    label_senha.pack(pady=10)
+
+    entrada_senha = tk.Entry(janela_editar, show="*", font=("Arial", 12))
+    entrada_senha.pack(pady=10)
+
+    def salvar_alteracoes():
+        global utilizador_atual
+        novo_nome = entrada_nome.get().strip()
+        nova_senha = entrada_senha.get().strip()
+
+        if not novo_nome or not nova_senha:
+            messagebox.showwarning("Atenção", "Os campos não podem ficar vazios.", parent=janela_editar)
+            return
+
+        caminho_antigo = os.path.join("dados_utilizador", utilizador_atual)
+        caminho_novo = os.path.join("dados_utilizador", novo_nome)
+
+        if os.path.exists(caminho_novo) and utilizador_atual != novo_nome:
+            messagebox.showerror("Erro", "Já existe um utilizador com este nome.", parent=janela_editar)
+            return
+
+        os.rename(caminho_antigo, caminho_novo)
+        f = open(os.path.join(caminho_novo, "dados.txt"), "w")
+        f.write(f"Utilizador: {novo_nome}\nSenha: {nova_senha}")
+        f.close()
+
+        utilizador_atual = novo_nome
+
+        messagebox.showinfo("Sucesso", "Dados atualizados com sucesso.", parent=janela_editar)
+        janela_editar.destroy()
+        mostrar_dados_utilizador()
+
+    btn_salvar = tk.Button(janela_editar, text="Salvar", font=("Arial", 12), bg="#5B299B", fg="white", command=salvar_alteracoes)
+    btn_salvar.pack(pady=20)
+
+    btn_cancelar = tk.Button(janela_editar, text="Cancelar", font=("Arial", 12), command=janela_editar.destroy)
+    btn_cancelar.pack()
 
 def restaurar_tela_padrao():
     """Restaura o conteúdo padrão do frame."""
@@ -781,11 +926,17 @@ def mostrar_playlists():
 
 def criar_playlist():
     global playlists
-    """Cria uma nova playlist."""
+
+    if not utilizador_atual:  # Verifica se o utilizador está logado
+        messagebox.showwarning("Acesso Restrito", "Você precisa estar logado para criar uma playlist.")
+        return
+
+    # Solicitar o nome da nova playlist
     nome_playlist = simpledialog.askstring("Nova Playlist", "Digite o nome da nova playlist:")
     if nome_playlist:
         if nome_playlist not in playlists:
             playlists[nome_playlist] = []
+            salvar_playlists()  # Salva as playlists imediatamente
             messagebox.showinfo("Sucesso", f"Playlist '{nome_playlist}' criada.")
             mostrar_playlists()  # Atualiza a interface
         else:
@@ -825,6 +976,49 @@ def adicionar_a_playlist(nome_musica):
 
     lista_playlists.bind("<Double-1>", selecionar_playlist)
 
+
+def editar_dados_utilizador():
+    """Permite ao utilizador editar seus dados (nome e senha)."""
+    global utilizador_atual
+
+    novo_utilizador = simpledialog.askstring("Editar Nome", "Digite o novo nome de utilizador:", initialvalue=utilizador_atual)
+    nova_senha = simpledialog.askstring("Editar Senha", "Digite a nova senha:", show="*")
+
+    if not novo_utilizador or not nova_senha:
+        messagebox.showwarning("Atenção", "Os campos não podem ficar vazios.")
+        return
+
+    caminho_antigo = os.path.join("dados_utilizador", utilizador_atual)
+    caminho_novo = os.path.join("dados_utilizador", novo_utilizador)
+
+    if os.path.exists(caminho_novo) and utilizador_atual != novo_utilizador:
+        messagebox.showerror("Erro", "Já existe um utilizador com este nome.")
+        return
+
+    # Renomeia a pasta do utilizador e atualiza os dados
+    os.rename(caminho_antigo, caminho_novo)
+    f = open(os.path.join(caminho_novo, "dados.txt"), "w")
+    f.write(f"Utilizador: {novo_utilizador}\nSenha: {nova_senha}")
+    f.close()
+
+    utilizador_atual = novo_utilizador
+    messagebox.showinfo("Sucesso", "Dados atualizados com sucesso.")
+    mostrar_dados_utilizador()
+
+def excluir_conta():
+    """Permite ao utilizador excluir sua conta."""
+    global utilizador_atual
+
+    confirmar = messagebox.askyesno("Confirmar Exclusão", "Tem certeza de que deseja excluir sua conta? Esta ação é irreversível.")
+    if confirmar:
+        caminho_utilizador = os.path.join("dados_utilizador", utilizador_atual)
+        if os.path.exists(caminho_utilizador):
+            shutil.rmtree(caminho_utilizador)
+            utilizador_atual = None
+            messagebox.showinfo("Conta Excluída", "Sua conta foi excluída com sucesso.")
+            logout()
+        else:
+            messagebox.showerror("Erro", "Conta não encontrada.")
 
 app = ctk.CTk()
 app.title("MusicWave")
@@ -898,41 +1092,48 @@ btn_conta.grid(row=0, column=1, padx=20, pady=10, sticky="e")
 menu_frame = ctk.CTkFrame(app_frame, width=200, corner_radius=10)
 menu_frame.grid(row=1, column=0, sticky="nsw", padx=10, pady=10)
 
-# Adiciona imagem no menu lateral
+# Adicionar imagem no menu lateral
 try:
     imagem_path = "./images/AED_logo_final.png"
-    imagem = ctk.CTkImage(Image.open(imagem_path), size=(200,75))
-    imagem_label = ctk.CTkLabel(menu_frame, image=imagem, text="")
-    imagem_label.pack(pady=10)
+    imagem = ctk.CTkImage(Image.open(imagem_path), size=(200, 75))  # Configurar o tamanho da imagem
+    imagem_label = ctk.CTkLabel(menu_frame, image=imagem, text="")  # Substituir texto por imagem
+    imagem_label.pack(pady=20)  # Adicionar padding ao redor da imagem
 except Exception as e:
     print(f"Erro ao carregar a imagem: {e}")
 
-menu_label = ctk.CTkLabel(menu_frame, text="Música", font=("Roboto", 20, "bold"))
-menu_label.pack(pady=20)
+try:
+    home_image = ctk.CTkImage(Image.open("./images/home_icon.png"), size=(20, 20))
+    playlists_image = ctk.CTkImage(Image.open("./images/playlists_icon.png"), size=(20, 20))
+    albums_image = ctk.CTkImage(Image.open("./images/albuns_icon.png"), size=(20, 20))
+    artists_image = ctk.CTkImage(Image.open("./images/artistas_icon.png"), size=(20, 20))
+    upload_image = ctk.CTkImage(Image.open("./images/upload_icon.png"), size=(20, 20))
+    library_image = ctk.CTkImage(Image.open("./images/library_icon.png"), size=(20, 20))
+except Exception as e:
+    print(f"Erro ao carregar imagens: {e}")
 
 search_entry = ctk.CTkEntry(menu_frame, placeholder_text="Pesquisar...")
 search_entry.pack(pady=10, padx=20, fill="x")
 
-btn_home = ctk.CTkButton(menu_frame, text="Home", width=180, corner_radius=5, fg_color="purple")
+btn_home = ctk.CTkButton(menu_frame, text="Home", image=home_image, width=180, corner_radius=5, fg_color="purple")
 btn_home.pack(pady=5)
 
 btn_home.pack(pady=5)
 btn_home.configure(command=mostrar_home)
 
-btn_playlists = ctk.CTkButton(menu_frame, text="Playlists", width=180, corner_radius=5, command=mostrar_playlists)
+btn_playlists = ctk.CTkButton(menu_frame, text="Playlists", image=playlists_image, width=180, corner_radius=5, command=mostrar_playlists)
 btn_playlists.pack(pady=5)
 
-btn_albums = ctk.CTkButton(menu_frame, text="Álbuns", width=180, corner_radius=5)
-btn_albums.pack(pady=5)
 
-btn_artists = ctk.CTkButton(menu_frame, text="Artistas", width=180, corner_radius=5, command=mostrar_menu_artistas)
+btn_artists = ctk.CTkButton(menu_frame, text="Artistas", image=artists_image, width=180, corner_radius=5, command=mostrar_menu_artistas)
 btn_artists.pack(pady=5)
 
-btn_carregar_musica = ctk.CTkButton(menu_frame, text="Carregar Música", width=180, corner_radius=5, command=carregar_musica)
+btn_carregar_musica = ctk.CTkButton(menu_frame, text="Carregar Música", image=upload_image, width=180, corner_radius=5, command=carregar_musica)
 btn_carregar_musica.pack(pady=5)
 
-btn_biblioteca = ctk.CTkButton(menu_frame, text="Biblioteca", width=180, corner_radius=5, command=mostrar_biblioteca)
+btn_biblioteca = ctk.CTkButton(menu_frame, text="Biblioteca", width=180, image=library_image, corner_radius=5, command=mostrar_biblioteca)
 btn_biblioteca.pack(pady=5)
+
+
 
 # Conteúdo principal da tela de música
 conteudo_frame = ctk.CTkFrame(app_frame, corner_radius=10)

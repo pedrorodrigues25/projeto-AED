@@ -1,2 +1,2 @@
-Usuário: Rodrigo
+Utilizador: Rodrigo
 Senha: 123

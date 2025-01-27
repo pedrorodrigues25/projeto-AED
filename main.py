@@ -10,8 +10,8 @@ import tkinter as tk
 from PIL import Image, ImageTk, ImageDraw
 
 pygame.mixer.init()
-sincronizando_barra = False  # Para evitar conflitos durante o clique
-posicao_manual = -1          # Armazena a posição ajustada manualmente
+sincronizando_barra = False  
+posicao_manual = -1          
 
 # Configuração inicial do CustomTkinter
 ctk.set_appearance_mode("Dark")
@@ -134,13 +134,13 @@ def atualizar_barra_progresso():
                     # Se uma posição manual foi definida, sincroniza com ela
                     if posicao_manual != -1:
                         posicao_atual = posicao_manual
-                        posicao_manual = -1  # Reseta após usar
+                        posicao_manual = -1  #
                     else:
                         posicao_atual = pygame.mixer.music.get_pos() / 1000
 
                     barra_progresso.set(posicao_atual / duracao)
 
-                time.sleep(0.5)  # Atualização a cada 500ms
+                time.sleep(0.5)  
         except Exception as e:
             print(f"Erro ao atualizar a barra de progresso: {e}")
 
@@ -149,7 +149,7 @@ def alterar_posicao(event):
     global musica_atual, sincronizando_barra, posicao_manual
     if musica_atual and player_ativo:
         try:
-            sincronizando_barra = True  # Interrompe a atualização contínua
+            sincronizando_barra = True  
 
             # Calcula a nova posição com base no clique
             largura_barra = barra_progresso.winfo_width()
@@ -197,8 +197,6 @@ def atualizar_lista_musicas(mostrar_botoes=False):
             botao_adicionar.pack(side="right", padx=5)
 
 # Funções de autenticação
-
-
 def criar_conta():
     novo_utilizador = novo_utilizador_entry.get().strip()
     nova_senha = nova_senha_entry.get().strip()
@@ -812,7 +810,7 @@ def mostrar_detalhes_artista(artista_selecionado):
 
             # Frame para cada álbum
             album_frame = tk.Frame(albuns_inner_frame, bg="black")
-            album_frame.pack(side="left", padx=20)  # Espaçamento entre os álbuns
+            album_frame.pack(side="left", padx=20)  
 
             img_label = tk.Label(album_frame, image=img, bg="black")
             img_label.image = img  # Referência para a imagem
@@ -891,7 +889,6 @@ def logout():
 def mostrar_playlists():
     global playlists 
     """Exibe as playlists e suas músicas."""
-    # Limpa o conteúdo atual do frame principal
     for widget in conteudo_frame.winfo_children():
         widget.destroy()
 
